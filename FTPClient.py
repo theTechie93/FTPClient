@@ -88,7 +88,7 @@ class Application(Frame):
 
         self.Pass = Entry(self.MainFrame, textvariable=RemPath, width=20)
         self.Pass.place(x=80, y=110)
-        self.Pass.insert(END, "/home/solize/")
+        self.Pass.insert(END, "Remote Path")
 
         self.LabelName = tk.Label(self.MainFrame, text="Select File:")
         self.LabelName.place(x=10, y=140)
