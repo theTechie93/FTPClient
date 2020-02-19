@@ -1,11 +1,12 @@
 import os
+import stat
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 from tkinter.ttk import *
-
 import paramiko
+from cryptography.hazmat.primitives.serialization import ssh
 
 titleName = "FTP Client"
 
@@ -21,14 +22,38 @@ def UploadFile(fileName, hostName, UName, hostPass, RemPath):
     FullFile = fileName.get()
     FileName = os.path.basename(FullFile)
     RemotePath = RemPath.get()
-    fileName.set("")
+    if FullFile == '':
+        messagebox.showinfo("File", "Please select the file")
+        return
     s = paramiko.SSHClient()
     s.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    s.connect(HostName, 22, username=UserName, password=HostPass, timeout=4)
-    sftp = s.open_sftp()
+    try:
+        s.connect(HostName, 22, username=UserName, password=HostPass, timeout=4)
+        sftp = s.open_sftp()
+    except:
+        messagebox.showerror("Connection Failed", "Couldn't able to connect to the FTP server ")
+        return
+    try:
+        sftp.stat(RemotePath)
+    except FileNotFoundError:
+        messagebox.showinfo("Remote path error", "Please Double check Remote path")
+        return
+    if RemotePath.endswith("/"):
+        # folderName = RemotePath.split("/")[-2]
+        RemotePath = RemotePath
+    else:
+        # folderName = RemotePath.split("/")[-1]
+        RemotePath = RemotePath + "/"
+    fileName.set("")
+
+    # try:
+    #     sftp.chdir(RemotePath)
+    # except IOError as e:
+    #     raise e
     sftp.put(FullFile, RemotePath + FileName, callback=printTotals)
     messagebox.showinfo("Info",
                         "The File: " + FullFile + "\nUploaded Successfully to the FTP Server\n" + "ftp://" + HostName + RemotePath)
+
 
 class Application(Frame):
     def __init__(self, master):
@@ -68,27 +93,27 @@ class Application(Frame):
 
         self.Host = Entry(self.MainFrame, textvariable=hostName, width=20)
         self.Host.place(x=80, y=20)
-        self.Host.insert(END, "Host IP Address")
+        self.Host.insert(END, "10.58.12.29")
 
         self.UserLabelName = Label(self.MainFrame, text="User Name:")
         self.UserLabelName.place(x=10, y=50)
         self.UName = Entry(self.MainFrame, textvariable=UName, width=20)
         self.UName.place(x=80, y=50)
-        self.UName.insert(END, "Username")
+        self.UName.insert(END, "solize")
 
         self.PassLabelName = tk.Label(self.MainFrame, text="Password:")
         self.PassLabelName.place(x=10, y=80)
 
         self.Pass = Entry(self.MainFrame, show="*", textvariable=hostPass, width=20)
         self.Pass.place(x=80, y=80)
-        self.Pass.insert(END, "Password")
+        self.Pass.insert(END, "csm")
 
         self.PassLabelName = tk.Label(self.MainFrame, text="Remote Path:")
         self.PassLabelName.place(x=10, y=110)
 
         self.Pass = Entry(self.MainFrame, textvariable=RemPath, width=20)
         self.Pass.place(x=80, y=110)
-        self.Pass.insert(END, "Remote Path")
+        self.Pass.insert(END, "/home/solize/")
 
         self.LabelName = tk.Label(self.MainFrame, text="Select File:")
         self.LabelName.place(x=10, y=140)
